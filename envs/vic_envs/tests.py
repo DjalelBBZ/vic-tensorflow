@@ -7,7 +7,7 @@ def all_installed_test():
 def deterministic_grid_test():
     env = gym.make("deterministic-grid-world-v0")
     prev_state = env.state
-    for _ in xrange(100): env.step(0)  # noop
+    for _ in range(100): env.step(0)  # noop
     assert env.state == prev_state
 
     while env.state[0] > 0:

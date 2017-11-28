@@ -87,7 +87,9 @@ class QLearningPolicy(object):
             self.action = tf.argmax(output_perm[self.single_omega_place], axis=0)
 
     def process_transitions(self, transitions, plot=False):
-        p_s, a, r, n_s = zip(*transitions)
+        # print(transitions)
+        p_s, a, r, n_s = list(zip(*transitions))
+        # print(r[0])
         a = [action - 1 for action in a]
 
         loss, _ = self.sess.run([self.loss_red, self.train_op],
@@ -108,10 +110,10 @@ class QLearningPolicy(object):
 #            transitions.append(
 #                (t.states[-1], 1, t.rewards[-1], self.n_states, t.omega))
 
-        for j in xrange(10):
+        for j in range(10):
             shuffle(transitions)
 
-            for i in xrange(len(transitions)/self.batch_size):
+            for i in range(len(transitions)//self.batch_size):
                 self.process_transitions(
                     transitions[i*self.batch_size:(i+1)*self.batch_size],
                     i == 0 and j % 10 == 0)
@@ -120,7 +122,8 @@ class QLearningPolicy(object):
         self.action_it = 0
 
     def get_action(self, state, omega):
-        assert isinstance(state, int)
+        state = int(state)
+        assert isinstance(state, int), state
         if self.action_it > 5 and np.random.uniform() < self.terminate_prob:
             self.reset_action_it()
             return 0  # terminate

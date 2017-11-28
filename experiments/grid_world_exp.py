@@ -1,5 +1,5 @@
 from __future__ import print_function
-
+from functools import reduce
 import gym
 import vic_envs
 import math
@@ -31,7 +31,7 @@ class GridWorldExperiment():
         self.env = gym.make("deterministic-grid-world-v0")
         self.n_actions = self.env.action_space.n
         self.n_states = 1 + reduce(lambda x, y: x*y,
-             map(lambda x: x.n, self.env.observation_space.spaces))
+             list(map(lambda x: x.n, self.env.observation_space.spaces)))
 
         if plotting:
             self.plot_robots = [PlotRobot('dqn loss', 0, log_scale=True),
@@ -71,7 +71,7 @@ class GridWorldExperiment():
 
     def train(self, n_episodes=1000):
         trajectories = []
-        for episode in xrange(n_episodes):
+        for episode in range(n_episodes):
             if episode % 1000 == 999:
                 self.logger.info("episode %d", episode)
                 self.logger.info("==========")
@@ -100,8 +100,8 @@ class GridWorldExperiment():
             self.logger.debug("p(omega|s0) = %s", p_omegas)
 
             assert len(p_omegas) == len(q_omegas)
-            rewards = map(lambda (p, q): math.log(q) - math.log(p),
-                          zip(p_omegas, q_omegas))
+            rewards = list(map(lambda p: math.log(p[1]) - math.log(p[0]),
+                          zip(p_omegas, q_omegas)))
 
             self.logger.debug("rewards: %s", rewards)
             if self.plotting is not None:
@@ -121,8 +121,8 @@ class GridWorldExperiment():
                 for t in trajectories:
                     p_omegas = self.prior.all_p_omegas()
                     q_omegas = self.q_approx.all_q_values(t.states[-1])
-                    t.rewards = map(lambda (p, q): math.log(q) - math.log(p),
-                                    zip(p_omegas, q_omegas))
+                    t.rewards = list(map(lambda p: math.log(p[1]) - math.log(p[0]),
+                                    zip(p_omegas, q_omegas)))
                 self.policy.update_policy(trajectories)
                 trajectories = []
             # TODO: refactor
@@ -130,7 +130,7 @@ class GridWorldExperiment():
             if episode % 400 == 399:
                 self.logger.info("episode %d", episode)
                 q_app = np.zeros([self.n_states, self.n_options])
-                for s in xrange(self.n_states):
+                for s in range(self.n_states):
                     q_app[s] = self.q_approx.all_q_values(s)
                 #    self.logger.info("state %d, q(omega): %s",
                 #                     s, q_app[s]))
@@ -204,10 +204,10 @@ if __name__ == "__main__":
     if not args.no_roll:
         samples = 20
         full_reward_sum = 0.
-        for omega in xrange(experiment.n_options):
+        for omega in range(experiment.n_options):
             logger.info("omega %d", omega)
             reward_sum = 0.
-            for _ in xrange(samples):
+            for _ in range(samples):
                 experiment.rollout(omega)
                 q_omega = experiment.q_approx.q_value(
                     omega, experiment.state_hash(experiment.env.state))
